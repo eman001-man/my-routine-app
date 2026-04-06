@@ -1,120 +1,93 @@
 <!DOCTYPE html>
-<html lang="ne">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Work Log - Safe & Easy</title>
+    <title>My Calendar</title>
     <style>
-        :root { --main-blue: #1d3557; --accent-blue: #457b9d; --red: #e63946; --bg: #f1faee; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; }
-        .container { background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 25px; max-width: 450px; margin: auto; }
+        :root { --main-blue: #2c3e50; --accent-blue: #3498db; --bg: #f8f9fa; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
+        .container { background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 25px; max-width: 450px; margin: auto; }
         
-        h1 { font-size: 1.4rem; color: var(--main-blue); text-align: center; margin-bottom: 5px; }
-        .sub-text { font-size: 0.85rem; color: #666; text-align: center; display: block; margin-bottom: 20px; line-height: 1.4; }
+        h1 { font-size: 1.4rem; color: var(--main-blue); text-align: center; margin-bottom: 25px; letter-spacing: 1px; }
         
         .punch-area { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
-        .btn { padding: 20px 10px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
+        .btn { padding: 20px 10px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; text-decoration: none; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn:active { transform: scale(0.95); }
         .in { background-color: var(--accent-blue); }
         .out { background-color: var(--main-blue); }
         
-        .btn-label-en { font-size: 1.1rem; display: block; }
-        .btn-label-ne { font-size: 0.9rem; display: block; margin-top: 5px; opacity: 0.9; }
-        .btn-label-jp { font-size: 0.75rem; display: block; opacity: 0.8; }
+        .label-en { font-size: 1rem; }
+        .label-jp { font-size: 0.7rem; opacity: 0.8; margin-top: 4px; }
 
-        .history-header { border-top: 2px solid #eee; padding-top: 20px; display: flex; justify-content: space-between; align-items: center; }
-        #logList { margin-top: 15px; max-height: 400px; overflow-y: auto; }
-        .log-item { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; border-left: 6px solid var(--accent-blue); }
-        .log-item.out-item { border-left-color: var(--main-blue); }
-        .delete-btn { color: var(--red); background: none; border: none; font-size: 1.4rem; cursor: pointer; }
-        
-        .download-btn { width: 100%; margin-top: 20px; padding: 12px; background: none; border: 2px dashed #ccc; border-radius: 10px; color: #888; font-size: 0.8rem; cursor: pointer; }
+        .history-header { border-top: 1px solid #eee; padding-top: 20px; color: var(--main-blue); font-weight: bold; margin-bottom: 15px; }
+        .log-item { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; font-size: 0.9rem; }
+        .cal-link { display: block; text-align: center; margin-top: 15px; color: var(--accent-blue); text-decoration: none; font-size: 0.85rem; border: 1px solid var(--accent-blue); padding: 10px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Work Time Record</h1>
-    <span class="sub-text">
-        Protect your rights. Record your own hours.<br>
-        आफ्नो कामको समय सुरक्षित राख्नुहोस्।<br>
-        自分の勤務時間を自分で守るために。
-    </span>
+    <h1>My Calendar</h1>
 
     <div class="punch-area">
-        <button class="btn in" onclick="addLog('IN')">
-            <span class="btn-label-en">PUNCH IN</span>
-            <span class="btn-label-ne">काम सुरु</span>
-            <span class="btn-label-jp">勤務開始</span>
-        </button>
-        <button class="btn out" onclick="addLog('OUT')">
-            <span class="btn-label-en">PUNCH OUT</span>
-            <span class="btn-label-ne">काम सकियो</span>
-            <span class="btn-label-jp">勤務終了</span>
-        </button>
+        <a id="btnIn" class="btn in" href="#" target="_blank" onclick="generateCalLink('IN')">
+            <span class="label-en">Check In</span>
+            <span class="label-jp">開始記録</span>
+        </a>
+        <a id="btnOut" class="btn out" href="#" target="_blank" onclick="generateCalLink('OUT')">
+            <span class="label-en">Check Out</span>
+            <span class="label-jp">終了記録</span>
+        </a>
     </div>
 
-    <div class="history-header">
-        <strong style="color: var(--main-blue);">History (इतिहास)</strong>
-        <span id="logCount" style="font-size: 0.8rem; color: #999;">0 records</span>
-    </div>
-
+    <div class="history-header">Recent Activity</div>
     <div id="logList"></div>
-    
-    <button class="download-btn" onclick="exportData()">Export Data (CSV形式で保存)</button>
+
+    <a href="https://calendar.google.com/" target="_blank" class="cal-link">Open Google Calendar</a>
 </div>
 
 <script>
-    let logs = JSON.parse(localStorage.getItem('nepalWorkLogs')) || [];
-
-    function addLog(type) {
+    function generateCalLink(type) {
         const now = new Date();
-        const dateStr = now.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit', weekday: 'short' });
-        const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-        logs.unshift({ type, date: dateStr, time: timeStr, full: now.toLocaleString() });
-        saveAndRender();
+        const start = now.toISOString().replace(/-|:|\.\d\d\d/g, "");
+        const end = new Date(now.getTime() + 30 * 60000).toISOString().replace(/-|:|\.\d\d\d/g, ""); // 30分枠で作成
+        
+        const title = type === 'IN' ? "Work Start (Started)" : "Work End (Finished)";
+        const details = `Recorded by My Calendar app at ${now.toLocaleString()}`;
+        
+        // Googleカレンダーの「予定作成画面」へ飛ばすURL
+        const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}`;
+        
+        // ログを保存
+        saveLog(type, now.toLocaleString());
+        
+        // ボタンのリンク先を書き換えて、そのまま別タブでカレンダーを開く
+        const btnId = type === 'IN' ? 'btnIn' : 'btnOut';
+        document.getElementById(btnId).href = url;
     }
 
-    function deleteLog(index) {
-        if(confirm('Delete this record?')) {
-            logs.splice(index, 1);
-            saveAndRender();
-        }
+    function saveLog(type, time) {
+        let logs = JSON.parse(localStorage.getItem('myCalLogs')) || [];
+        logs.unshift({ type, time });
+        if(logs.length > 5) logs.pop(); // 直近5件のみ表示
+        localStorage.setItem('myCalLogs', JSON.stringify(logs));
+        renderLogs();
     }
 
-    function saveAndRender() {
-        localStorage.setItem('nepalWorkLogs', JSON.stringify(logs));
+    function renderLogs() {
+        const logs = JSON.parse(localStorage.getItem('myCalLogs')) || [];
         const list = document.getElementById('logList');
-        const count = document.getElementById('logCount');
         list.innerHTML = '';
-        count.innerText = `${logs.length} records`;
-
-        logs.forEach((log, index) => {
+        logs.forEach(log => {
             const div = document.createElement('div');
-            div.className = `log-item ${log.type === 'OUT' ? 'out-item' : ''}`;
-            div.innerHTML = `
-                <div>
-                    <b>${log.type}</b>: ${log.date} ${log.time}
-                </div>
-                <button class="delete-btn" onclick="deleteLog(${index})">×</button>
-            `;
+            div.className = 'log-item';
+            div.innerHTML = `<span>${log.type}</span> <span>${log.time}</span>`;
             list.appendChild(div);
         });
     }
 
-    function exportData() {
-        if(logs.length === 0) return;
-        let csv = "Type,Date,Time,FullTimestamp\n";
-        logs.forEach(l => { csv += `${l.type},${l.date},${l.time},${l.full}\n`; });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('href', url);
-        a.setAttribute('download', 'work_log.csv');
-        a.click();
-    }
-
-    saveAndRender();
+    renderLogs();
 </script>
 
 </body>
