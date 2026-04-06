@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Routine Tracker</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --bg: #f5f7fa;
+            --text: #333;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        h1 { font-size: 1.5rem; text-align: center; color: var(--primary); }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+        button {
+            padding: 10px 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .routine-list { list-style: none; padding: 0; }
+        .routine-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            transition: 0.3s;
+        }
+        .routine-item.done { background-color: #e8f4fd; opacity: 0.7; }
+        .routine-item.done span { text-decoration: line-through; }
+        .delete-btn { background: #ff5e5e; font-size: 12px; }
+        .stats {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>My Routine</h1>
+    
+    <div class="input-group">
+        <input type="text" id="newRoutine" placeholder="例: 20分読書する">
+        <button onclick="addRoutine()">追加</button>
+    </div>
+
+    <ul id="routineList" class="routine-list"></ul>
+
+    <div class="stats">
+        完了済み: <span id="doneCount">0</span> / 全体: <span id="totalCount">0</span>
+        <br><small>※データはブラウザに保存されます</small>
+    </div>
+</div>
+
+<script>
+    let routines = JSON.parse(localStorage.getItem('myRoutines')) || [];
+
+    function render() {
+        const list = document.getElementById('routineList');
+        list.innerHTML = '';
+        routines.forEach((r, index) => {
+            const li = document.createElement('li');
+            li.className = `routine-item ${r.done ? 'done' : ''}`;
+            li.innerHTML = `
+                <div style="display:flex; align-items:center;">
+                    <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleRoutine(${index})">
+                    <span style="margin-left:10px;">${r.text}</span>
+                </div>
+                <button class="delete-btn" onclick="deleteRoutine(${index})">削除</button>
+            `;
+            list.appendChild(li);
+        });
+        updateStats();
+        localStorage.setItem('myRoutines', JSON.stringify(routines));
+    }
+
+    function addRoutine() {
+        const input = document.getElementById('newRoutine');
+        if (input.value.trim() === '') return;
+        routines.push({ text: input.value, done: false });
+        input.value = '';
+        render();
+    }
+
+    function toggleRoutine(index) {
+        routines[index].done = !routines[index].done;
+        render();
+    }
+
+    function deleteRoutine(index) {
+        routines.splice(index, 1);
+        render();
+    }
+
+    function updateStats() {
+        document.getElementById('totalCount').innerText = routines.length;
+        document.getElementById('doneCount').innerText = routines.filter(r => r.done).length;
+    }
+
+    render();
+</script>
+
+</body>
+</html>
