@@ -5,90 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Calendar</title>
     <style>
-        :root { --main-blue: #2c3e50; --accent-blue: #3498db; --bg: #f8f9fa; }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
-        .container { background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 25px; max-width: 450px; margin: auto; }
+        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; --record-in: #e74c3c; --record-out: #2ecc71; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; }
+        .container { background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); padding: 20px; max-width: 400px; margin: auto; }
         
-        h1 { font-size: 1.4rem; color: var(--main-blue); text-align: center; margin-bottom: 25px; letter-spacing: 1px; }
-        
-        .punch-area { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
-        .btn { padding: 20px 10px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; text-decoration: none; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        h1 { font-size: 1.2rem; color: var(--primary); text-align: center; margin-bottom: 20px; }
+
+        /* カレンダーのスタイル */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 20px; }
+        .day-name { font-size: 0.7rem; color: #999; font-weight: bold; padding-bottom: 5px; }
+        .day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.9rem; position: relative; background: #fafafa; }
+        .day.today { border: 2px solid var(--accent); font-weight: bold; }
+        .dot-container { display: flex; gap: 2px; margin-top: 2px; }
+        .dot { width: 4px; height: 4px; border-radius: 50%; }
+        .dot-in { background: var(--record-in); }
+        .dot-out { background: var(--record-out); }
+
+        /* 打刻ボタン */
+        .punch-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .btn { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
         .btn:active { transform: scale(0.95); }
-        .in { background-color: var(--accent-blue); }
-        .out { background-color: var(--main-blue); }
-        
-        .label-en { font-size: 1rem; }
-        .label-jp { font-size: 0.7rem; opacity: 0.8; margin-top: 4px; }
+        .in { background-color: var(--accent); }
+        .out { background-color: var(--primary); }
+        .btn small { display: block; font-size: 0.65rem; opacity: 0.8; font-weight: normal; margin-top: 2px; }
 
-        .history-header { border-top: 1px solid #eee; padding-top: 20px; color: var(--main-blue); font-weight: bold; margin-bottom: 15px; }
-        .log-item { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; font-size: 0.9rem; }
-        .cal-link { display: block; text-align: center; margin-top: 15px; color: var(--accent-blue); text-decoration: none; font-size: 0.85rem; border: 1px solid var(--accent-blue); padding: 10px; border-radius: 10px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>My Calendar</h1>
-
-    <div class="punch-area">
-        <a id="btnIn" class="btn in" href="#" target="_blank" onclick="generateCalLink('IN')">
-            <span class="label-en">Check In</span>
-            <span class="label-jp">開始記録</span>
-        </a>
-        <a id="btnOut" class="btn out" href="#" target="_blank" onclick="generateCalLink('OUT')">
-            <span class="label-en">Check Out</span>
-            <span class="label-jp">終了記録</span>
-        </a>
-    </div>
-
-    <div class="history-header">Recent Activity</div>
-    <div id="logList"></div>
-
-    <a href="https://calendar.google.com/" target="_blank" class="cal-link">Open Google Calendar</a>
-</div>
-
-<script>
-    function generateCalLink(type) {
-        const now = new Date();
-        const start = now.toISOString().replace(/-|:|\.\d\d\d/g, "");
-        const end = new Date(now.getTime() + 30 * 60000).toISOString().replace(/-|:|\.\d\d\d/g, ""); // 30分枠で作成
-        
-        const title = type === 'IN' ? "Work Start (Started)" : "Work End (Finished)";
-        const details = `Recorded by My Calendar app at ${now.toLocaleString()}`;
-        
-        // Googleカレンダーの「予定作成画面」へ飛ばすURL
-        const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}`;
-        
-        // ログを保存
-        saveLog(type, now.toLocaleString());
-        
-        // ボタンのリンク先を書き換えて、そのまま別タブでカレンダーを開く
-        const btnId = type === 'IN' ? 'btnIn' : 'btnOut';
-        document.getElementById(btnId).href = url;
-    }
-
-    function saveLog(type, time) {
-        let logs = JSON.parse(localStorage.getItem('myCalLogs')) || [];
-        logs.unshift({ type, time });
-        if(logs.length > 5) logs.pop(); // 直近5件のみ表示
-        localStorage.setItem('myCalLogs', JSON.stringify(logs));
-        renderLogs();
-    }
-
-    function renderLogs() {
-        const logs = JSON.parse(localStorage.getItem('myCalLogs')) || [];
-        const list = document.getElementById('logList');
-        list.innerHTML = '';
-        logs.forEach(log => {
-            const div = document.createElement('div');
-            div.className = 'log-item';
-            div.innerHTML = `<span>${log.type}</span> <span>${log.time}</span>`;
-            list.appendChild(div);
-        });
-    }
-
-    renderLogs();
-</script>
-
-</body>
-</html>
+        /* 履歴リスト */
+        .history { border-top: 1px solid #eee; padding-
