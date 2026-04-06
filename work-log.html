@@ -5,62 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Calendar</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; }
-        .container { background: white; border-radius: 15px; padding: 15px; max-width: 400px; margin: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { font-size: 1.1rem; text-align: center; color: var(--primary); margin: 5px 0 15px; }
+        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; --in-dot: #e74c3c; --out-dot: #2ecc71; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
+        .container { background: white; border-radius: 20px; padding: 20px; max-width: 400px; margin: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         
-        /* カレンダー */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 15px; }
-        .day-header { font-size: 0.6rem; text-align: center; color: #999; padding-bottom: 5px; }
-        .day { aspect-ratio: 1; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.8rem; position: relative; border-radius: 4px; background: #fff; }
-        .today { border: 2px solid var(--accent); font-weight: bold; }
-        .dots { display: flex; gap: 2px; position: absolute; bottom: 2px; }
-        .dot { width: 4px; height: 4px; border-radius: 50%; }
-        .dot-in { background: #e74c3c; }
-        .dot-out { background: #2ecc71; }
+        h1 { font-size: 1.2rem; text-align: center; color: var(--primary); margin: 5px 0 20px; letter-spacing: 1px; }
 
-        /* ボタン */
-        .punch-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        button { padding: 12px 5px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
-        .in { background-color: var(--accent); }
-        .out { background-color: var(--primary); }
-        button small { display: block; font-size: 0.6rem; font-weight: normal; margin-top: 2px; }
-
-        /* 履歴・CSV */
-        .history { border-top: 1px solid #eee; padding-top: 10px; }
-        .log-item { display: flex; justify-content: space-between; font-size: 0.75rem; padding: 5px 0; border-bottom: 1px solid #f9f9f9; }
-        .dl-btn { width: 100%; margin-top: 15px; padding: 10px; background: none; border: 1px dashed #ccc; color: #888; border-radius: 8px; font-size: 0.7rem; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1 id="monthYear">My Calendar</h1>
-    <div class="calendar-grid" id="calGrid"></div>
-
-    <div class="punch-area">
-        <button class="in" onclick="add('IN')">Check In<small>काम सुरु / 開始</small></button>
-        <button class="out" onclick="add('OUT')">Check Out<small>काम सकियो / 終了</small></button>
-    </div>
-
-    <div class="history">
-        <div id="logList" style="max-height: 150px; overflow-y: auto;"></div>
-        <button class="dl-btn" onclick="download()">Download CSV (इतिहास डाउनलोड)</button>
-    </div>
-</div>
-
-<script>
-    // データを描画する関数
-    function render() {
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = now.getMonth();
-        document.getElementById('monthYear').innerText = y + " / " + (m + 1);
-
-        const data = JSON.parse(localStorage.getItem('workData_v4')) || [];
-        const grid = document.getElementById('calGrid');
-        grid.innerHTML = '<div class="day-header">S</div><div class="day-header">M</div><div class="day-header">T</div><div class="day-header">W</div><div class="day-header">T</div><div class="day-header">F</div><div class="day-header">S</div>';
-
-        const first = new Date(y, m, 1).getDay();
-        const last = new Date(y, m + 1,
+        /* カレンダー構造 */
+        .calendar-wrapper { margin-bottom: 20px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .day-name { font-size: 0.7rem; text-align: center; color: #999; font-weight: bold; padding-bottom: 8px; }
+        .day { aspect-ratio: 1; background: #f9f9f9; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.9rem; position: relative; border: 1px solid #f0f0f0; min-height: 42px; }
+        .today { border: 2px solid var(--accent); background: #fff; font-weight: bold; color: var(--accent); }
+        
+        /* 打刻の点（ドット） */
+        .dots { display: flex; gap: 3px; position: absolute; bottom: 5px; }
+        .dot { width: 5px; height: 5px; border-radius: 50%; }
+        .dot-in { background: var(--in-dot); }
+        .dot-out { background: var(--
