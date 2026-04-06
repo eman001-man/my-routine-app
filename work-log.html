@@ -22,4 +22,157 @@
         .dots { display: flex; gap: 3px; position: absolute; bottom: 5px; }
         .dot { width: 5px; height: 5px; border-radius: 50%; }
         .dot-in { background: var(--in-dot); }
-        .dot-out { background: var(--
+        .dot-out { background: var(--out-dot); }
+
+        /* 操作ボタン */
+        .punch-area { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .btn { padding: 15px 5px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn:active { transform: scale(0.96); box-shadow: none; }
+        .btn-in { background-color: var(--accent); }
+        .btn-out { background-color: var(--primary); }
+        .btn small { display: block; font-size: 0.65rem; font-weight: normal; margin-top: 3px; opacity: 0.9; }
+
+        /* 履歴とCSV */
+        .history-box { border-top: 2px solid #f0f0f0; padding-top: 15px; }
+        h3 { font-size: 0.9rem; margin: 0 0 10px; color: #666; display: flex; justify-content: space-between; }
+        .log-list { max-height: 180px; overflow-y: auto; margin-bottom: 15px; }
+        .log-item { display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f9f9f9; font-size: 0.85rem; }
+        .log-label { font-weight: bold; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; }
+        
+        .csv-btn { width: 100%; padding: 12px; background: none; border: 1px dashed #ccc; color: #888; border-radius: 10px; font-size: 0.8rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 id="monthTitle">My Calendar</h1>
+
+    <div class="calendar-wrapper">
+        <div class="calendar-grid" id="calendarBoard">
+            </div>
+    </div>
+
+    <div class="punch-area">
+        <button class="btn btn-in" onclick="punch('IN')">
+            Check In<small>काम सुरु / 開始</small>
+        </button>
+        <button class="btn btn-out" onclick="punch('OUT')">
+            Check Out<small>काम सकियो / 終了</small>
+        </button>
+    </div>
+
+    <div class="history-box">
+        <h3>History <span id="count" style="font-weight:normal; font-size:0.7rem;">0 records</span></h3>
+        <div id="logList" class="log-list"></div>
+        <button class="csv-btn" onclick="exportCSV()">Download CSV (इतिहास डाउनलोड)</button>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'work_log_final_v5';
+
+    function init() {
+        render();
+    }
+
+    function render() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        document.getElementById('monthTitle').innerText = `${year} / ${month + 1}`;
+
+        const logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        const board = document.getElementById('calendarBoard');
+        
+        // カレンダー初期化（曜日ヘッダー）
+        board.innerHTML = '';
+        ['S','M','T','W','T','F','S'].forEach(day => {
+            const el = document.createElement('div');
+            el.className = 'day-name';
+            el.innerText = day;
+            board.appendChild(el);
+        });
+
+        // 日付計算
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        // 空白埋め
+        for (let i = 0; i < firstDay; i++) {
+            board.appendChild(document.createElement('div'));
+        }
+
+        // 日付埋め
+        for (let d = 1; d <= lastDate; d++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day';
+            if (d === now.getDate()) dayDiv.classList.add('today');
+            dayDiv.innerText = d;
+
+            // 打刻ドット判定
+            const dayLogs = logs.filter(l => l.y === year && l.m === month && l.d === d);
+            const dotsDiv = document.createElement('div');
+            dotsDiv.className = 'dots';
+            if (dayLogs.some(l => l.type === 'IN')) dotsDiv.innerHTML += '<div class="dot dot-in"></div>';
+            if (dayLogs.some(l => l.type === 'OUT')) dotsDiv.innerHTML += '<div class="dot dot-out"></div>';
+            
+            dayDiv.appendChild(dotsDiv);
+            board.appendChild(dayDiv);
+        }
+
+        // 履歴リスト更新
+        const list = document.getElementById('logList');
+        const count = document.getElementById('count');
+        list.innerHTML = logs.length ? '' : '<div style="text-align:center; color:#ccc; padding:20px; font-size:0.8rem;">No records yet.</div>';
+        count.innerText = `${logs.length} records`;
+
+        logs.slice(0, 30).forEach(l => {
+            const item = document.createElement('div');
+            item.className = 'log-item';
+            const color = l.type === 'IN' ? 'var(--accent)' : 'var(--primary)';
+            item.innerHTML = `
+                <div><span class="log-label" style="background:${color}">${l.type}</span>${l.m+1}/${l.d}</div>
+                <div style="font-weight:bold">${l.time}</div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    function punch(type) {
+        const now = new Date();
+        const logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        logs.unshift({
+            type: type,
+            y: now.getFullYear(),
+            m: now.getMonth(),
+            d: now.getDate(),
+            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            full: now.toLocaleString()
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+        render();
+    }
+
+    function exportCSV() {
+        const logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        if (!logs.length) return alert("No data.");
+        
+        let csv = "Type,Date,Time,FullDateTime\n";
+        logs.forEach(l => {
+            csv += `${l.type},${l.y}/${l.m+1}/${l.d},${l.time},"${l.full}"\n`;
+        });
+
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `work_history_${new Date().toLocaleDateString()}.csv`;
+        a.click();
+    }
+
+    // ページ読み込み完了時に確実に実行
+    window.onload = init;
+</script>
+
+</body>
+</html>
