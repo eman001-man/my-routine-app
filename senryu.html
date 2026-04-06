@@ -1,84 +1,87 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI川柳・五七五の友</title>
+    <title>AI Haiku Master</title>
     <style>
         body {
-            font-family: "Sawarabi Mincho", serif; /* 縦書き風の落ち着いたフォント */
+            font-family: 'Georgia', serif;
             background-color: #f4f1ea;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            flex-direction: column;
         }
         .container {
             background: white;
             padding: 40px;
-            border-radius: 4px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             text-align: center;
-            border: 2px solid #5d5d5d;
-            max-width: 350px;
+            max-width: 450px;
             width: 90%;
+            border-top: 8px solid #8c2727;
         }
-        .senryu-box {
-            font-size: 1.8rem;
-            writing-mode: vertical-rl; /* 縦書き */
-            text-orientation: upright;
+        .haiku-box {
+            font-size: 1.5rem;
+            font-style: italic;
             margin: 30px auto;
-            height: 250px;
-            letter-spacing: 0.3rem;
-            line-height: 2.5;
+            min-height: 120px;
+            line-height: 1.8;
+            color: #333;
         }
         button {
-            background-color: #8c2727; /* 漆塗りっぽい赤 */
+            background-color: #8c2727;
             color: white;
             border: none;
-            padding: 12px 25px;
-            font-size: 1rem;
+            padding: 15px 30px;
+            font-size: 1.1rem;
             cursor: pointer;
-            border-radius: 20px;
+            border-radius: 30px;
             transition: 0.3s;
+            box-shadow: 0 4px 0 #5a1919;
         }
-        button:hover { background-color: #a63e3e; }
-        .loading { color: #888; font-size: 0.8rem; }
+        button:hover { background-color: #a63e3e; transform: translateY(-2px); }
+        button:active { transform: translateY(2px); box-shadow: none; }
+        .back-link { margin-top: 25px; display: block; color: #666; text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { text-decoration: underline; }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div class="container">
-    <h2 id="title">AI川柳</h2>
+    <h2>AI Haiku Master</h2>
     
-    <div id="senryuDisplay" class="senryu-box">
-        ボタンを<br>押せば一句<br>生まれます
+    <div id="haikuDisplay" class="haiku-box">
+        Click the button<br>to create<br>a new Haiku.
     </div>
 
-    <button onclick="generateSenryu()" id="genBtn">一句ひねる</button>
-    <p id="status" class="loading"></p>
+    <button onclick="generateHaiku()">Compose a Haiku</button>
+    
+    <a href="index.html" class="back-link">← Back to Routine</a>
 </div>
 
 <script>
-    // 今回は「ランダムに組み合わせる」方式で、ネットがなくても動くAI風にします
-    const kami = ["パソコンで", "AIが", "窓際に", "40代", "コーヒーと", "散歩道"];
-    const naka = ["五七五を", "悩み抜いて", "夢を追い", "キーを叩いて", "風に吹かれて", "アイデアが"];
-    const shimo = ["詠んでみた", "朝の風", "一歩ずつ", "花開く", "筆進む", "冬の空"];
+    // 英語の五・七・五（音節）をイメージしたフレーズ集
+    const line1 = ["Morning sun rises", "A quiet garden", "Coding with AI", "Step by step I go", "Coffee in my hand", "The wind whispers"];
+    const line2 = ["Chasing dreams across the sky", "Learning something new today", "Building tools for everyone", "Finding peace in every day", "From Japan to the whole world", "Future starts with one small click"];
+    const line3 = ["A new journey starts", "The flower blooms now", "Heart full of hope", "Life is beautiful", "Never too late", "Spring is in the air"];
 
-    function generateSenryu() {
-        const status = document.getElementById('status');
-        status.innerText = "考え中...";
+    function generateHaiku() {
+        const display = document.getElementById('haikuDisplay');
+        display.style.opacity = 0; // フェードアウト演出
         
         setTimeout(() => {
-            const k = kami[Math.floor(Math.random() * kami.length)];
-            const n = naka[Math.floor(Math.random() * naka.length)];
-            const s = shimo[Math.floor(Math.random() * shimo.length)];
+            const l1 = line1[Math.floor(Math.random() * line1.length)];
+            const l2 = line2[Math.floor(Math.random() * line2.length)];
+            const l3 = line3[Math.floor(Math.random() * line3.length)];
             
-            document.getElementById('senryuDisplay').innerHTML = `${k}<br>${n}<br>${s}`;
-            status.innerText = "";
-        }, 500); // 0.5秒だけ「考えてるフリ」をさせる演出です
+            display.innerHTML = `${l1}<br>${l2}<br>${l3}`;
+            display.style.opacity = 1;
+        }, 300);
     }
 </script>
 
