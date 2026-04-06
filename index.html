@@ -1,164 +1,85 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Routine Partner</title>
+    <title>My Global Routine</title>
     <style>
-        :root {
-            --primary: #4a90e2;
-            --bg: #f5f7fa;
-            --text: #333;
-        }
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 400px;
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        }
-        h1 { font-size: 1.5rem; text-align: center; color: var(--primary); }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input[type="text"] {
-            flex: 1;
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; flex-direction: column; }
+        .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h1 { color: #1a73e8; text-align: center; margin-bottom: 1.5rem; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+        input { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
+        button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; transition: 0.3s; }
+        .add-btn { background-color: #1a73e8; color: white; }
+        .add-btn:hover { background-color: #1557b0; }
+        ul { list-style: none; padding: 0; }
+        li { background: #fff; border-bottom: 1px solid #eee; padding: 12px; display: flex; align-items: center; justify-content: space-between; }
+        .delete-btn { color: #ff4d4d; background: none; font-size: 1.2rem; }
+        
+        /* 川柳アプリへのリンクボタン */
+        .nav-link { 
+            margin-top: 20px; 
+            display: block; 
+            text-align: center; 
+            text-decoration: none; 
+            color: #8c2727; 
+            font-weight: bold;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            outline: none;
-        }
-        button {
-            padding: 10px 15px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .routine-list { list-style: none; padding: 0; }
-        .routine-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            border-bottom: 1px solid #eee;
+            border: 2px solid #8c2727;
+            border-radius: 30px;
             transition: 0.3s;
         }
-        .routine-item.done { background-color: #e8f4fd; opacity: 0.7; }
-        .routine-item.done span { text-decoration: line-through; }
-        .delete-btn { background: #ff5e5e; font-size: 12px; }
-        .stats {
-            margin-top: 20px;
-            font-size: 0.9rem;
-            text-align: center;
-            color: #666;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
-        }
+        .nav-link:hover { background-color: #8c2727; color: white; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 id="title">My Routine</h1>
+    <h1>My Daily Routine</h1>
     
     <div class="input-group">
-        <input type="text" id="newRoutine">
-        <button onclick="addRoutine()" id="addBtn">Add</button>
+        <input type="text" id="routineInput" placeholder="Enter a new routine...">
+        <button class="add-btn" onclick="addRoutine()">Add</button>
     </div>
 
-    <ul id="routineList" class="routine-list"></ul>
+    <ul id="routineList"></ul>
 
-    <div class="stats" id="statsArea">
-        Done: <span id="doneCount">0</span> / Total: <span id="totalCount">0</span>
-    </div>
+    <a href="senryu.html" class="nav-link">✍️ Try AI Senryu (Haiku)</a>
 </div>
 
 <script>
-    // --- 言語辞書の設定 ---
-    const i18n = {
-        ja: {
-            title: "マイ・ルーティン",
-            placeholder: "例: 20分読書する",
-            addBtn: "追加",
-            deleteBtn: "削除",
-            stats: "完了済み: {done} / 全体: {total}"
-        },
-        en: {
-            title: "My Routine",
-            placeholder: "e.g. Read for 20 mins",
-            addBtn: "Add",
-            deleteBtn: "Delete",
-            stats: "Done: {done} / Total: {total}"
-        }
-    };
-
-    // ブラウザの言語を取得（日本語以外はすべて英語にする）
-    const lang = navigator.language.startsWith('ja') ? 'ja' : 'en';
-    const t = i18n[lang];
-
-    // 初期のテキスト設定
-    document.getElementById('title').innerText = t.title;
-    document.getElementById('newRoutine').placeholder = t.placeholder;
-    document.getElementById('addBtn').innerText = t.addBtn;
-
+    const routineList = document.getElementById('routineList');
     let routines = JSON.parse(localStorage.getItem('myRoutines')) || [];
 
-    function render() {
-        const list = document.getElementById('routineList');
-        list.innerHTML = '';
-        routines.forEach((r, index) => {
+    function renderRoutines() {
+        routineList.innerHTML = '';
+        routines.forEach((routine, index) => {
             const li = document.createElement('li');
-            li.className = `routine-item ${r.done ? 'done' : ''}`;
             li.innerHTML = `
-                <div style="display:flex; align-items:center;">
-                    <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleRoutine(${index})">
-                    <span style="margin-left:10px;">${r.text}</span>
-                </div>
-                <button class="delete-btn" onclick="deleteRoutine(${index})">${t.deleteBtn}</button>
+                <span>${routine}</span>
+                <button class="delete-btn" onclick="deleteRoutine(${index})">×</button>
             `;
-            list.appendChild(li);
+            routineList.appendChild(li);
         });
-        updateStats();
         localStorage.setItem('myRoutines', JSON.stringify(routines));
     }
 
     function addRoutine() {
-        const input = document.getElementById('newRoutine');
-        if (input.value.trim() === '') return;
-        routines.push({ text: input.value, done: false });
-        input.value = '';
-        render();
-    }
-
-    function toggleRoutine(index) {
-        routines[index].done = !routines[index].done;
-        render();
+        const input = document.getElementById('routineInput');
+        if (input.value.trim() !== '') {
+            routines.push(input.value.trim());
+            input.value = '';
+            renderRoutines();
+        }
     }
 
     function deleteRoutine(index) {
         routines.splice(index, 1);
-        render();
+        renderRoutines();
     }
 
-    function updateStats() {
-        const total = routines.length;
-        const done = routines.filter(r => r.done).length;
-        // 文字列の置き換え
-        let statsText = t.stats.replace('{done}', done).replace('{total}', total);
-        document.getElementById('statsArea').innerText = statsText;
-    }
-
-    render();
+    renderRoutines();
 </script>
 
 </body>
