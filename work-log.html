@@ -5,29 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Calendar</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; --record-in: #e74c3c; --record-out: #2ecc71; }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; }
-        .container { background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); padding: 20px; max-width: 400px; margin: auto; }
+        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; }
+        body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
+        .container { background: white; border-radius: 20px; padding: 20px; max-width: 400px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.2rem; text-align: center; color: var(--primary); }
         
-        h1 { font-size: 1.2rem; color: var(--primary); text-align: center; margin-bottom: 20px; }
+        /* カレンダー設定 */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
+        .day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #eee; border-radius: 5px; font-size: 0.8rem; position: relative; }
+        .day.today { background: var(--accent); color: white; font-weight: bold; }
+        .dot { width: 5px; height: 5px; border-radius: 50%; position: absolute; bottom: 3px; }
+        .dot-in { background: #e74c3c; left: 30%; }
+        .dot-out { background: #2ecc71; right: 30%; }
 
-        /* カレンダーのスタイル */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 20px; }
-        .day-name { font-size: 0.7rem; color: #999; font-weight: bold; padding-bottom: 5px; }
-        .day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.9rem; position: relative; background: #fafafa; }
-        .day.today { border: 2px solid var(--accent); font-weight: bold; }
-        .dot-container { display: flex; gap: 2px; margin-top: 2px; }
-        .dot { width: 4px; height: 4px; border-radius: 50%; }
-        .dot-in { background: var(--record-in); }
-        .dot-out { background: var(--record-out); }
-
-        /* 打刻ボタン */
         .punch-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .btn { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
-        .btn:active { transform: scale(0.95); }
+        button { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
         .in { background-color: var(--accent); }
         .out { background-color: var(--primary); }
-        .btn small { display: block; font-size: 0.65rem; opacity: 0.8; font-weight: normal; margin-top: 2px; }
 
-        /* 履歴リスト */
-        .history { border-top: 1px solid #eee; padding-
+        .history { border-top: 1px solid #ddd; padding-top: 10px; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 id="monthYear">My Calendar</h1>
+    <div class="calendar-grid" id="calendar"></div>
+
+    <div class="punch-area">
+        <button class="in" onclick="addRecord('IN')">Check In</button>
+        <button class="out" onclick="addRecord('OUT')">Check Out</button>
+    </div>
+
+    <div class="history" id="historyList">Loading history...</div>
+</div>
+
+<script>
+    function initApp() {
+        try {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            document.getElementById('monthYear').innerText = `${year} / ${month + 1}`;
+
+            const calElement = document.getElementById('calendar');
+            calElement.innerHTML = ''; 
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const records = JSON.parse(localStorage.getItem('myInternalCal')) || [];
+
+            // 空白
+            for (let i = 0; i < firstDay; i++) {
+                calElement.innerHTML += '<div></div>';
+            }
+
+            // 日付
+            for (let d = 1; d <= lastDate; d++) {
+                const isToday = (d === now.getDate()) ? 'today' : '';
+                const dayRecords = records.filter(r => r.y === year && r.m === month && r.d === d);
+                
+                let dots = '';
+                if(dayRecords.some(r => r.type === 'IN')) dots += '<div class="dot dot-in"></div>';
+                if(dayRecords.some(r => r.type === 'OUT')) dots += '<div class="dot dot-out"></div>';
+
+                calElement.innerHTML += `<div class="day ${isToday}">${d}${dots}</div>`;
+            }
+
+            // 履歴
+            const hList = document.getElementById('historyList');
+            hList.innerHTML = records.length ? '' : 'No records yet.';
+            records.slice(0, 5).forEach(r => {
+                hList.innerHTML += `<div>${r.m+1}/${r.d} - ${r.type} at ${r.time}</div>`;
+            });
+
+        } catch (e) {
+            document.body.innerHTML = "<h1>Error loading app</h1><p>" + e.message + "</p>";
+        }
+    }
+
+    function addRecord(type) {
+        const now = new Date();
+        const records = JSON.parse(localStorage.getItem('myInternalCal')) || [];
+        records.unshift({
+            type: type,
+            y: now.getFullYear(),
+            m: now.getMonth(),
+            d: now.getDate(),
+            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        localStorage.setItem('myInternalCal', JSON.stringify(records));
+        initApp();
+    }
+
+    // 起動
+    window.onload = initApp;
+</script>
+
+</body>
+</html>
