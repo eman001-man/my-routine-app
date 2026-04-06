@@ -6,50 +6,137 @@
     <title>My Calendar</title>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; --in-color: #e74c3c; --out-color: #2ecc71; }
-        body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; }
-        .container { background: white; border-radius: 20px; padding: 20px; max-width: 450px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 10px; color: #333; }
+        .container { background: white; border-radius: 20px; padding: 20px; max-width: 400px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        h1 { font-size: 1.2rem; text-align: center; color: var(--primary); margin-bottom: 15px; }
+        h1 { font-size: 1.1rem; text-align: center; color: var(--primary); margin: 0 0 15px 0; }
         
-        /* カレンダー表示 */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
-        .day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; font-size: 0.8rem; position: relative; border: 1px solid #eee; }
-        .day.today { border: 2px solid var(--accent); font-weight: bold; background: #fff; }
-        .dots { display: flex; gap: 2px; margin-top: 2px; }
+        /* カレンダー */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 20px; }
+        .day-header { font-size: 0.6rem; text-align: center; color: #999; font-weight: bold; padding-bottom: 5px; }
+        .day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fdfdfd; border-radius: 6px; font-size: 0.8rem; border: 1px solid #f0f0f0; min-height: 40px; position: relative; }
+        .day.today { border: 2px solid var(--accent); font-weight: bold; }
+        .dots { display: flex; gap: 2px; position: absolute; bottom: 4px; width: 100%; justify-content: center; }
         .dot { width: 4px; height: 4px; border-radius: 50%; }
         .dot-in { background: var(--in-color); }
         .dot-out { background: var(--out-color); }
 
-        /* 操作エリア */
-        .punch-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; }
-        button { padding: 12px 5px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.95); }
+        /* 操作 */
+        .punch-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        button { padding: 12px 2px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; }
         .in { background-color: var(--accent); }
         .out { background-color: var(--primary); }
         button small { display: block; font-size: 0.6rem; font-weight: normal; margin-top: 2px; opacity: 0.9; }
 
-        /* 履歴エリア */
-        .history-section { border-top: 2px solid #eee; padding-top: 15px; }
-        h3 { font-size: 0.9rem; margin-bottom: 10px; color: #666; }
-        .history-list { max-height: 250px; overflow-y: auto; padding-right: 5px; }
-        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 0.85rem; }
-        .log-type { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; color: white; }
-        .type-in { background: var(--accent); }
-        .type-out { background: var(--primary); }
+        /* 履歴 */
+        .history-section { border-top: 2px solid #f0f0f0; padding-top: 15px; }
+        h3 { font-size: 0.85rem; margin: 0 0 10px 0; color: #777; }
+        .history-list { max-height: 200px; overflow-y: auto; font-size: 0.8rem; }
+        .log-item { display: flex; justify-content: space-between; padding: 8px 4px; border-bottom: 1px solid #f9f9f9; }
+        .log-tag { font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; color: #fff; margin-right: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 id="monthYear">My Calendar</h1>
+    <h1 id="monthDisplay">My Calendar</h1>
     
-    <div class="calendar-grid" id="calendar"></div>
+    <div class="calendar-grid" id="calendar">
+        <div class="day-header">S</div><div class="day-header">M</div><div class="day-header">T</div>
+        <div class="day-header">W</div><div class="day-header">T</div><div class="day-header">F</div><div class="day-header">S</div>
+    </div>
 
     <div class="punch-area">
-        <button class="in" onclick="addRecord('IN')">
-            Check In
-            <small>काम सुरु / 開始</small>
-        </button>
-        <button class="out" onclick="addRecord('OUT')">
-            Check Out
-            <small>काम सकियो / 終了</small>
+        <button class="in" onclick="saveRecord('IN')">Check In<small>काम सुरु / 開始</small></button>
+        <button class="out" onclick="saveRecord('OUT')">Check Out<small>काम सकियो / 終了</small></button>
+    </div>
+
+    <div class="history-section">
+        <h3>History (इतिहास / 履歴)</h3>
+        <div id="historyList" class="history-list"></div>
+    </div>
+</div>
+
+<script>
+    // 起動時に実行
+    function init() {
+        try {
+            renderAll();
+        } catch (e) {
+            console.error(e);
+            alert("Error: " + e.message);
+        }
+    }
+
+    function renderAll() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth();
+        document.getElementById('monthDisplay').innerText = `${y} / ${m + 1}`;
+
+        // データの取得
+        const raw = localStorage.getItem('myWorkDataV3');
+        const records = raw ? JSON.parse(raw) : [];
+
+        // カレンダーのクリアと再構築
+        const cal = document.getElementById('calendar');
+        const headers = cal.querySelectorAll('.day-header');
+        cal.innerHTML = '';
+        headers.forEach(h => cal.appendChild(h));
+
+        const firstDay = new Date(y, m, 1).getDay();
+        const lastDate = new Date(y, m + 1, 0).getDate();
+
+        for (let i = 0; i < firstDay; i++) cal.innerHTML += '<div></div>';
+
+        for (let d = 1; d <= lastDate; d++) {
+            const isToday = (d === now.getDate()) ? 'today' : '';
+            const dayRecs = records.filter(r => r.y === y && r.m === m && r.d === d);
+            
+            let dots = '<div class="dots">';
+            if(dayRecs.some(r => r.type === 'IN')) dots += '<div class="dot dot-in"></div>';
+            if(dayRecs.some(r => r.type === 'OUT')) dots += '<div class="dot dot-out"></div>';
+            dots += '</div>';
+
+            cal.innerHTML += `<div class="day ${isToday}">${d}${dots}</div>`;
+        }
+
+        // 履歴の表示
+        const list = document.getElementById('historyList');
+        list.innerHTML = records.length ? '' : '<div style="color:#ccc;text-align:center">No records.</div>';
+        records.forEach(r => {
+            const row = document.createElement('div');
+            row.className = 'log-item';
+            const color = r.type === 'IN' ? 'var(--accent)' : 'var(--primary)';
+            row.innerHTML = `
+                <div><span class="log-tag" style="background:${color}">${r.type}</span>${r.m+1}/${r.d}</div>
+                <div style="font-weight:bold">${r.time}</div>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    function saveRecord(type) {
+        const now = new Date();
+        const raw = localStorage.getItem('myWorkDataV3');
+        const records = raw ? JSON.parse(raw) : [];
+
+        records.unshift({
+            type: type,
+            y: now.getFullYear(),
+            m: now.getMonth(),
+            d: now.getDate(),
+            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            ts: now.getTime()
+        });
+
+        localStorage.setItem('myWorkDataV3', JSON.stringify(records));
+        renderAll(); // 画面を更新
+    }
+
+    // 読み込み完了後に実行
+    window.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
