@@ -9,22 +9,25 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
         .container { background: white; border-radius: 20px; padding: 20px; max-width: 400px; margin: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         
-        h1 { font-size: 1.2rem; text-align: center; color: var(--primary); margin: 5px 0 20px; letter-spacing: 1px; }
+        h1 { font-size: 1.2rem; text-align: center; color: var(--primary); margin: 5px 0 15px; letter-spacing: 1px; }
 
-        /* カレンダー構造 */
-        .calendar-wrapper { margin-bottom: 20px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        /* 名前入力エリア */
+        .name-area { margin-bottom: 20px; }
+        .name-area label { font-size: 0.75rem; color: #777; display: block; margin-bottom: 5px; font-weight: bold; }
+        .name-input { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; box-sizing: border-box; outline: none; transition: 0.3s; }
+        .name-input:focus { border-color: var(--accent); }
+
+        /* カレンダー */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
         .day-name { font-size: 0.7rem; text-align: center; color: #999; font-weight: bold; padding-bottom: 8px; }
         .day { aspect-ratio: 1; background: #f9f9f9; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.9rem; position: relative; border: 1px solid #f0f0f0; min-height: 42px; }
         .today { border: 2px solid var(--accent); background: #fff; font-weight: bold; color: var(--accent); }
-        
-        /* 打刻の点（ドット） */
         .dots { display: flex; gap: 3px; position: absolute; bottom: 5px; }
         .dot { width: 5px; height: 5px; border-radius: 50%; }
         .dot-in { background: var(--in-dot); }
         .dot-out { background: var(--out-dot); }
 
-        /* 操作ボタン */
+        /* ボタン */
         .punch-area { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
         .btn { padding: 15px 5px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn:active { transform: scale(0.96); box-shadow: none; }
@@ -32,13 +35,12 @@
         .btn-out { background-color: var(--primary); }
         .btn small { display: block; font-size: 0.65rem; font-weight: normal; margin-top: 3px; opacity: 0.9; }
 
-        /* 履歴とCSV */
+        /* 履歴・CSV */
         .history-box { border-top: 2px solid #f0f0f0; padding-top: 15px; }
         h3 { font-size: 0.9rem; margin: 0 0 10px; color: #666; display: flex; justify-content: space-between; }
         .log-list { max-height: 180px; overflow-y: auto; margin-bottom: 15px; }
-        .log-item { display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f9f9f9; font-size: 0.85rem; }
-        .log-label { font-weight: bold; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; }
-        
+        .log-item { display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f9f9f9; font-size: 0.8rem; }
+        .log-label { font-weight: bold; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; }
         .csv-btn { width: 100%; padding: 12px; background: none; border: 1px dashed #ccc; color: #888; border-radius: 10px; font-size: 0.8rem; cursor: pointer; }
     </style>
 </head>
@@ -47,10 +49,12 @@
 <div class="container">
     <h1 id="monthTitle">My Calendar</h1>
 
-    <div class="calendar-wrapper">
-        <div class="calendar-grid" id="calendarBoard">
-            </div>
+    <div class="name-area">
+        <label>FULL NAME (In English)</label>
+        <input type="text" id="userName" class="name-input" placeholder="e.g. Biraj Thapa" oninput="saveName()">
     </div>
+
+    <div class="calendar-grid" id="calendarBoard"></div>
 
     <div class="punch-area">
         <button class="btn btn-in" onclick="punch('IN')">
@@ -69,10 +73,18 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'work_log_final_v5';
+    const STORAGE_KEY = 'work_log_final_v6';
+    const NAME_KEY = 'user_name_v6';
 
     function init() {
+        // 保存されている名前を表示
+        document.getElementById('userName').value = localStorage.getItem(NAME_KEY) || '';
         render();
+    }
+
+    function saveName() {
+        const name = document.getElementById('userName').value;
+        localStorage.setItem(NAME_KEY, name);
     }
 
     function render() {
@@ -84,7 +96,6 @@
         const logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         const board = document.getElementById('calendarBoard');
         
-        // カレンダー初期化（曜日ヘッダー）
         board.innerHTML = '';
         ['S','M','T','W','T','F','S'].forEach(day => {
             const el = document.createElement('div');
@@ -93,23 +104,17 @@
             board.appendChild(el);
         });
 
-        // 日付計算
         const firstDay = new Date(year, month, 1).getDay();
         const lastDate = new Date(year, month + 1, 0).getDate();
 
-        // 空白埋め
-        for (let i = 0; i < firstDay; i++) {
-            board.appendChild(document.createElement('div'));
-        }
+        for (let i = 0; i < firstDay; i++) board.appendChild(document.createElement('div'));
 
-        // 日付埋め
         for (let d = 1; d <= lastDate; d++) {
             const dayDiv = document.createElement('div');
             dayDiv.className = 'day';
             if (d === now.getDate()) dayDiv.classList.add('today');
             dayDiv.innerText = d;
 
-            // 打刻ドット判定
             const dayLogs = logs.filter(l => l.y === year && l.m === month && l.d === d);
             const dotsDiv = document.createElement('div');
             dotsDiv.className = 'dots';
@@ -120,7 +125,6 @@
             board.appendChild(dayDiv);
         }
 
-        // 履歴リスト更新
         const list = document.getElementById('logList');
         const count = document.getElementById('count');
         list.innerHTML = logs.length ? '' : '<div style="text-align:center; color:#ccc; padding:20px; font-size:0.8rem;">No records yet.</div>';
@@ -130,8 +134,12 @@
             const item = document.createElement('div');
             item.className = 'log-item';
             const color = l.type === 'IN' ? 'var(--accent)' : 'var(--primary)';
+            const displayName = l.name ? `<small style="color:#999; display:block;">${l.name}</small>` : '';
             item.innerHTML = `
-                <div><span class="log-label" style="background:${color}">${l.type}</span>${l.m+1}/${l.d}</div>
+                <div>
+                    <span class="log-label" style="background:${color}">${l.type}</span>
+                    ${l.m+1}/${l.d} ${displayName}
+                </div>
                 <div style="font-weight:bold">${l.time}</div>
             `;
             list.appendChild(item);
@@ -139,9 +147,16 @@
     }
 
     function punch(type) {
+        const name = document.getElementById('userName').value;
+        if (!name) {
+            alert("Please enter your name first!");
+            return;
+        }
+
         const now = new Date();
         const logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         logs.unshift({
+            name: name,
             type: type,
             y: now.getFullYear(),
             m: now.getMonth(),
@@ -157,9 +172,9 @@
         const logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         if (!logs.length) return alert("No data.");
         
-        let csv = "Type,Date,Time,FullDateTime\n";
+        let csv = "Name,Type,Date,Time,FullDateTime\n";
         logs.forEach(l => {
-            csv += `${l.type},${l.y}/${l.m+1}/${l.d},${l.time},"${l.full}"\n`;
+            csv += `"${l.name || 'Unknown'}",${l.type},${l.y}/${l.m+1}/${l.d},${l.time},"${l.full}"\n`;
         });
 
         const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8' });
@@ -170,7 +185,6 @@
         a.click();
     }
 
-    // ページ読み込み完了時に確実に実行
     window.onload = init;
 </script>
 
